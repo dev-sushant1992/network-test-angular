@@ -1,28 +1,30 @@
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
 @Injectable({
-  providedIn: "root",
+  providedIn: 'root',
 })
 export class AppService {
   networkChangeObservable = new Subject<any>();
 
   constructor() {
-    (navigator as any).connection.addEventListener('change', this.hasGoodConnection.bind(this));
-  }
-
-  hasGoodConnection({target}) {
     const conn = (navigator as any).connection;
     if (conn) {
-      if (conn.saveData) {
-        this.networkChangeObservable.next(target);
+      conn.addEventListener('change', this.hasGoodConnection.bind(this));
+    }
+  }
+
+  hasGoodConnection({ target }) {
+    if (target) {
+      if (target.saveData) {
+        this.networkChangeObservable.next({isConnectionSlow: true, dataSaver: true});
       }
       const avoidTheseConnections = ['slow-2g', '2g' /* , '3g', '4g' */];
-      const effectiveType = conn.effectiveType || '';
+      const effectiveType = target.effectiveType || '';
       if (avoidTheseConnections.includes(effectiveType)) {
-        this.networkChangeObservable.next(target);
+        this.networkChangeObservable.next({isConnectionSlow: true});
       }
     }
-    this.networkChangeObservable.next(target);
+    this.networkChangeObservable.next({isConnectionSlow: false});
   }
 }
